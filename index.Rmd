@@ -1,0 +1,361 @@
+---
+title: <center><FONT COLOR="darkblue">GRAND SLAM TENIS</FONT></center>
+subtitle: "José María Fernández (jofercar@alumni.uv.es)" 
+author: "Universitat de València"
+date: "Diciembre de 2020 (actualizado el `r format(Sys.time(), '%d-%m-%Y')`)"
+output:
+  html_document:
+    #css: "./assets/my_css_file.css"
+    theme: journal
+    highlight: textmate 
+    toc: true
+    toc_depth: 3 
+    toc_float: 
+      collapsed: true
+      smooth_scroll: true
+    self_contained: true
+    number_sections: false
+    df_print: kable
+    code_download: true
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r packages-setup, include = FALSE}
+library(tidyverse)
+library(klippy)  #- remotes::install_github("rlesur/klippy")
+library(knitr)
+library(tidyr)    
+library(dplyr)    
+library(ggplot2)
+library(readxl)
+library(leaflet)
+library(gganimate)
+library(plotly)
+library(vembedr)
+library(kableExtra)
+library(wordcloud2)
+library(reactable)
+library(viridis)
+library(hrbrthemes)
+library(gt)
+```
+
+
+```{r chunk-setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, message = FALSE, warning = FALSE, 
+                      #results = "hold",
+                      cache = FALSE, cache.path = "/caches/", comment = "#>",
+                      #fig.width = 7, #fig.height= 7,   
+                      #out.width = 7, out.height = 7,
+                      collapse = TRUE,  fig.show = "hold",
+                      fig.asp = 7/9, out.width = "60%", fig.align = "center")
+knitr::opts_chunk$set(dev = "png", dev.args = list(type = "cairo-png"))
+```
+
+
+```{r options-setup, include = FALSE}
+options(scipen = 999) #- para quitar la notación científica
+options("yaml.eval.expr" = TRUE) 
+```
+
+
+```{r klippy, echo = FALSE}
+
+klippy::klippy(position = c("top", "right")) #- remotes::install_github("rlesur/klippy")
+
+```
+
+<hr class="linea-black">
+
+Trabajo elaborado para la asignatura "Programación y manejo de datos en la era del Big Data" de la Universitat de València durante el curso 2020-2021. El repo del trabajo está [aquí](https://github.com/josemafc/trabajo_BigData){target="_blank"}. La página web de la asignatura y los trabajos de mis compañeros pueden verse [aquí](https://perezp44.github.io/intro-ds-20-21-web/07-trabajos.html){target="_blank"}.
+
+
+
+<hr class="linea-red">
+
+<br>
+
+```{r, echo=FALSE,eval=TRUE,  out.width="60%"}
+
+knitr::include_graphics (here::here( "imagen","iconos_grand_slam.jpg"))
+
+```
+
+
+##   <FONT COLOR="deepskyblue">1. Introducción</FONT>
+
+
+En este trabajo muestro la cantidad de Grand Slam ganados por los mejores jugadores de la historia del Tenis.Donde podremos ver que hay algunos jugadores igualados pero existe un claro dominio por parte de Rafael Nadal en Roland Garros. He decidido realizar este trabajo porque me apasiona el tenis desde muy pequeño y por ello, me resulta interesante dar a conocer los siguientes datos.
+
+----------------
+
+## <FONT COLOR="deepskyblue">2. Datos</FONT> {.tabset}
+
+### <FONT COLOR="red">**Información**</FONT>
+
+He escogido la información de las páginas ATPTour, Wikipedia y el periódico "EL PAÍS" para proceder a elaborar tablas en excel que almaceno en la carpeta datos y las importo mediante los códigos que se observan en la pestaña "Códigos de datos importados"
+
+### <FONT COLOR="red">**Códigos de datos importados**</FONT> 
+
+```{r eval=TRUE, include=TRUE, echo=TRUE}
+
+grand_slam_ganados<- read_excel("./datos/grand_slam.xlsx")
+
+ranking_por_paises <- read_excel("./datos/ranking_por_paises.xlsx")
+
+```
+
+----------------
+
+##   <FONT COLOR="deepskyblue">3. Ranking por jugadores </FONT> {.tabset}
+
+Hasta el momento, 54 tenistas han ganado al menos un Grand Slam en la era abierta.En la siguiente tabla, se destaca a los 13 jugadores que han tenido una mayor cantidad de Grand Slam a lo largo de la historia del tenis. 
+Por un lado, se pueden observar nombres de jugadores actualmente en activo como Roger Federer y por otro lado, jugadores retirados como Boris Becker. 
+
+En la segunda pestaña, podemos observar en un gráfico de barras el ranking de Grand Slam. A un lado, el nombre de los tenistas y al otro, el total de Grand Slam conseguidos por cada jugador.
+La superioridad de Rafael Nadal sobre tierra batida es incuestionable. Mucho más cuando el terreno se acota a Roland Garros. En el Grand Slam francés ha ganado la mayor cifra de títulos que cualquier jugador haya ganado jamás en un mismo escenario. Y gracias a ello, ha conseguido igualarse a Roger Federer en cantidad de Grand Slam conseguidos hasta la fecha.
+
+### <FONT COLOR="red">**Posiciones**</FONT>
+
+```{r, echo=FALSE, eval=TRUE}
+
+knitr::kable(grand_slam_ganados) %>%
+  kableExtra::kable_styling(fixed_thead = list(enabled = T, background = "deepskyblue")) %>%  column_spec(3, bold = T, color = "white", background = "deepskyblue") 
+          
+```
+
+
+###   <FONT COLOR="red">**Gráfica**</FONT>
+
+```{r pressure, echo=FALSE, eval=TRUE,  out.width="80%"}
+
+grand_slam_ganados <- grand_slam_ganados %>% mutate(Nombre = forcats::as_factor(Nombre))  
+
+grand_slam_ganados <- grand_slam_ganados %>% mutate(Nombre = forcats::fct_reorder(Nombre, Total)) 
+
+p <- ggplot(grand_slam_ganados, aes(x = Nombre, y = Total)) + 
+  geom_col(fill = "cyan")
+
+p + labs(title = "GRAND SLAM",
+       subtitle = "(RANKING)",
+       caption = "Elaboración propia",
+       x = "Tenistas",
+       y = "Total") + theme_light() + 
+  geom_text(aes(label = Total),nudge_y =0.5, colour = "black") + coord_flip()
+
+```
+
+----------------
+
+## <FONT COLOR="deepskyblue">4.Diferentes premios y superficies</FONT>{.tabset}
+
+###   <FONT COLOR="red">**Premios**</FONT>
+
+Junto a los trofeos, los jugadores reciben un premio monetario al proclamarse campeones.
+
+Los tenistas ganan alrededor de 40.000 euros por participar en una primera ronda de un Grand Slam, más del doble de lo que ingresan en una primera ronda de un torneo Masters 1.000 (siguiente campeonato en importancia), y los premios por ganar un grande son mucho mayores que en cualquier torneo de la temporada.
+
+A pesar de que depende de la recaudación y del Grand Slam que se trate, los tenistas que se proclaman campeones en la final reciben un premio que oscila entre los 2,5-3 millones de euros.
+
+
+```{r, echo=FALSE,eval=TRUE,  out.width="60%"}
+
+knitr::include_graphics (here::here( "imagen","trofeos_tenis.png"))
+
+```
+
+###   <FONT COLOR="red">**Superficies**</FONT>
+
+
+En la siguiente imagen tenemos los diferentes tipos de pistas existentes y su composición.
+
+En primer lugar, tierra batida. Este tipo de pistas están hechas de esquisto, piedra y arcilla.
+
+En segundo y cuarto lugar de la imagen tenemos las pistas duras o de cemento. Estos tipos de pistas  evitan irregularidades en la trayectoria de la pelota y proporcionan un juego intermedio.
+
+En tercer lugar, las pistas de hierba donde el césped es la superficie original del tenis. Se trata de una superficie rápida, de bote irregular y la menos utilizada. La construcción y mantenimiento de este tipo de superficies es costoso y complejo.
+
+```{r, echo=FALSE,eval=TRUE,  out.width="60%"}
+
+knitr::include_graphics (here::here( "imagen","pistas_de_tenis.jpg"))
+
+```
+
+----------------
+
+##   <FONT COLOR="deepskyblue">5. Mapas de los estadios </FONT> {.tabset}
+
+Los siguientes mapas nos muestran la ubicación de cada uno de los estadios a partir de sus coordenadas correspondientes.
+
+En primer lugar,  en el MAPA 1 he decidido agrupar Roland Garros que se ubica en el sector sudoccidental de París, en el XVI distrito y,  Wimbledon que se encuentra en el All England Lawn Tennis y Croquet Club de Londres.
+
+En segundo lugar, en el MAPA 2 ubico el USTA Billie Jean King National Tennis Center que está localizado en el Flushing Meadows-Corona Park, en el borough de Queens en Nueva York y es la sede del Abierto de los Estados Unidos.
+
+En tercer lugar, en el MAPA 3 tenemos el Rod Laver Arena, un recinto multipropósito usado principalmente como estadio de tenis para el Abierto de Australia y  que es parte del complejo del parque de Melbourne.
+
+
+### <FONT COLOR="red">**MAPA 1**</FONT>
+
+
+```{r, echo=FALSE, eval=TRUE,  out.width="80%"}
+
+p <- leaflet() %>%
+  addTiles() %>% 
+  setView(lng = -1, lat = 50, zoom = 5.5) %>% 
+  addMarkers(lng = 2.2536, lat = 48.8467, popup = "Roland Garros") %>% 
+  addMarkers(lng = -0.2152, lat = 51.4319, popup = "Wimbledon") 
+
+p 
+
+```
+
+
+### <FONT COLOR="red">**MAPA 2**</FONT>
+
+```{r, echo=FALSE, eval=TRUE,  out.width="80%"}
+
+p <- leaflet() %>%
+  addTiles() %>% 
+  setView(lng = -74, lat = 43, zoom = 5) %>% 
+  addMarkers(lng = -73.8456, lat = 40.7504, popup = "Open USA)")
+
+
+p  
+
+```
+
+
+### <FONT COLOR="red">**MAPA 3**</FONT>
+
+```{r, echo=FALSE, eval=TRUE,  out.width="80%"}
+
+p <- leaflet() %>%
+  addTiles() %>% 
+  setView(lng = 145, lat = -40, zoom = 3.5) %>% 
+  addMarkers(lng = 144,5236, lat = -37, popup = "Open Australia") 
+
+
+p  
+
+```
+
+----------------
+
+##   <FONT COLOR="deepskyblue">6. Top 4 mejores </FONT> {.tabset}
+
+En esta gráfica si deslizamos el ratón por las barras podemos observar más detalladamente la cantidad de torneos Wimbledon ganados por cada uno de los 4 mejores en el ranking de Grand Slam. Cada uno tiene una distinta tonalidad de azul dependiendo de la cantidad que hayan ganado. 
+Sin embargo, su orden en la gráfica corresponde al total de Grand Slam ganados entre los citados anteriormente.
+
+Además, en la parte superior de la gráfica tenemos varias opciones por si se quiere descargar la gráfica como una imagen con formato png, también hacer zoom, entre otras.
+
+
+### <FONT COLOR="red">**Gráfica**</FONT>
+
+```{r, echo=FALSE, eval=TRUE,  out.width="80%"}
+df_1 <- grand_slam_ganados %>% slice_max(Total, n = 4)
+
+p <- ggplot(df_1, aes(x = Nombre, y = Total)) + 
+  geom_bar(stat = "identity",aes(fill = Wimbledon))
+
+p<- p + labs(title = "TÍTULOS WIMBLEDON",
+       subtitle = "(RANKING)",
+       caption = "Elaboración propia",
+       x = "Tenistas",
+       y = "Total") + theme_light() + 
+  geom_text(aes(label = Total),nudge_y =0.5, colour = "black")
+
+ggplotly(p)
+
+
+```
+
+----------------
+
+##   <FONT COLOR="deepskyblue">7. El punto más largo de la historia </FONT> {.tabset}
+
+Con 54 golpes este punto que disputaron Djokovic vs Nadal en el Us Open 2013 se convirtió en el más largo de la historia. 
+
+Rafa Nadal se proclamó campeón del US Open después de doblegar en cuatro sets a Novak Djokovic en la final. 
+Se trataba del título número 60 de su carrera, su 13º Grand Slam y la segunda vez que se coronaba en Nueva York.
+
+
+### <FONT COLOR="red">**Vídeo**</FONT>
+
+
+```{r eval = TRUE, echo = FALSE }
+
+embed_url("https://www.youtube.com/watch?v=LEvCLdNzNYQ")
+
+```
+
+----------------
+
+##   <FONT COLOR="deepskyblue">8. Ranking por países </FONT> {.tabset}
+
+En la siguiente tabla podemos consultar el top ten de países con más Grand Slams de la historia. Tenemos las cifras totales y a su vez, de manera más específica la cantidad ganada por cada país en cada uno de los torneos. 
+
+Vemos como USA se encuentra a día de hoy dominando con diferencia de los demás con un total de 51 títulos y predominio en las superficies de hierba(Wimbledon) y pista dura(USA y Australia) ganados por 12 tenistas.
+
+Roland Garros es el único Grand Slam que se le resiste a USA gracias a los españoles que tienen un alto nivel en las superificies de tierra batida. Y es por ello que, España se encuentra en segundo lugar de la tabla con un total de 31 títulos pero lejos de alcanzar a USA.
+
+### <FONT COLOR="red">**Tabla y WordCloud**</FONT>
+
+```{r, echo=FALSE, eval=TRUE}
+
+knitr::kable(ranking_por_paises) %>%
+  kableExtra::kable_styling(fixed_thead = list(enabled = T, background = "deepskyblue")) %>%  column_spec(3, bold = T, color = "white", background = "deepskyblue") 
+          
+```
+
+
+```{r eval=TRUE, echo=FALSE, out.width = "80%"}
+
+ranking_por_paises <- ranking_por_paises %>% select(c(País,Total))
+
+wordcloud2(data = ranking_por_paises, size = 0.6)
+
+```
+
+----------------
+
+##   <FONT COLOR="deepskyblue">9.Conclusión </FONT>  {.tabset}
+
+Comparando las dos tablas, entre jugadores y países cabe destacar que los tres primeros jugadores y que actualmente están activamente jugando, han aportado gran parte de los títulos de sus respectivos países a lo largo de su carrera tenística.
+
+Aunque podemos observar a Rafael Nadal y Roger Federer igualados en el ranking de Grand Slam, los duelos entre el español y el suizo vienen de lejos. Desde aquel primer partido en el Master 1000 de Miami en 2004, se han enfrentado en 40 ocasiones con un balance positivo para Nadal (24-16). Aunque el suizo cuenta con más títulos totales, Rafael Nadal le ha alcanzado en Grand Slams y ha conseguido más Máster 1000.
+
+
+
+```{r, echo=FALSE,eval=TRUE,  out.width="60%"}
+
+knitr::include_graphics (here::here( "imagen","nadal_gana_rolandgarros.jpg"))
+
+```
+
+> "EL éxito no es la victoria, sino todo lo que has peleado por ganar". Rafael Nadal
+
+----------------
+
+##   <FONT COLOR="deepskyblue">10. Referencias </FONT> 
+
+- [Enlace a ATPTour](https://www.atptour.com/es/news/roland-garros-2020-previa-final-datos-nadal)
+
+- [Enlace a Wikipedia](https://es.wikipedia.org/wiki/Grand_Slam_(tenis)#Grand_Slam)
+
+- [Enlace a ELPAIS](https://elpais.com/deportes/2020-10-11/nadal-logra-su-13-roland-garros-e-iguala-a-federer-en-grand-slams.html)
+
+- [Enlace a Marca](https://www.marca.com/2013/09/10/tenis/us_open/1378773165.html)
+
+- [Enlace a Tutoriales](https://perezp44.github.io/intro-ds-20-21-web/04-tutoriales.html)
+
+
+----------------
+
+<br><br>
+
+Para acabar este chunk para incluir tu `session info`:
+
+```{r}
+sessioninfo::session_info() %>% details::details(summary = 'current session info') 
+```
